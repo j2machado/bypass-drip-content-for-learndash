@@ -1,0 +1,13 @@
+/* Styles for the bypass drip content checkbox */
+.bypass-drip-content-checkbox {
+    margin-top: 10px !important;
+}
+
+.bypass-drip-content-checkbox + .ld-tooltip {
+    margin-left: 8px;
+}
+
+/* Add some emphasis to the bypass option when enabled */
+.bypass-drip-content-checkbox:checked {
+    border-color: #28a745;
+}
