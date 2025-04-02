@@ -3,12 +3,23 @@ jQuery(document).ready(function($) {
     $('.bypass-drip-content-select').each(function() {
         const $select = $(this);
         
+        // Get any pre-selected options
+        const selectedOptions = $select.find('option:selected').map(function() {
+            return {
+                id: $(this).val(),
+                text: $(this).text() || $(this).val()
+            };
+        }).get();
+
+        // Initialize Select2
         $select.select2({
             width: '100%',
             allowClear: true,
+            multiple: true,
             tags: true,
             tokenSeparators: [',', ' '],
             placeholder: $select.data('placeholder') || 'Select or add users',
+            closeOnSelect: false,
             createTag: function(params) {
                 const term = $.trim(params.term);
                 
@@ -21,6 +32,9 @@ jQuery(document).ready(function($) {
                     text: term,
                     newTag: true
                 };
+            },
+            templateSelection: function(data, container) {
+                return data.text;
             }
         });
 

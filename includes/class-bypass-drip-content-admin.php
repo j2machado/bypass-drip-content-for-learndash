@@ -53,14 +53,15 @@ class Bypass_Drip_Content_Admin {
                 'label'         => __('Bypass Drip Content', 'bypass-drip-content-ld'),
                 'type'          => 'select',
                 'class'         => 'bypass-drip-content-select',
-                'multiple'      => 'multiple',
+                'multiple'      => true,
                 'help_text'     => __('Select existing users or type new usernames to add them.', 'bypass-drip-content-ld'),
                 'default'       => array(),
                 'value'         => $saved_values,
                 'options'       => $all_options,
                 'attrs'         => array(
                     'data-tags' => 'true',
-                    'data-placeholder' => __('Select or add users', 'bypass-drip-content-ld')
+                    'data-placeholder' => __('Select or add users', 'bypass-drip-content-ld'),
+                    'multiple' => 'multiple'
                 )
             );
         }
@@ -76,21 +77,28 @@ class Bypass_Drip_Content_Admin {
             
             if ($post_id) {
                 // Get the raw POST data for our field
-                $raw_values = isset($_POST[$metabox_key]['bypass_drip_content']) ? $_POST[$metabox_key]['bypass_drip_content'] : '';
+                $raw_values = isset($_POST[$metabox_key]['bypass_drip_content']) ? $_POST[$metabox_key]['bypass_drip_content'] : array();
                 
-                // Convert to array if string (handles both array and string inputs)
-                $bypass_values = is_array($raw_values) ? $raw_values : array_filter(array($raw_values));
+                // Ensure we have an array
+                if (!is_array($raw_values)) {
+                    $raw_values = array($raw_values);
+                }
                 
-                // Sanitize each value
-                $bypass_values = array_map('sanitize_text_field', $bypass_values);
+                // Clean up the values
+                $bypass_values = array_map(function($value) {
+                    return sanitize_text_field(trim($value));
+                }, $raw_values);
                 
                 // Remove any empty values
                 $bypass_values = array_filter($bypass_values);
                 
-                // Store as JSON
-                update_post_meta($post_id, 'bypass_drip_content', json_encode(array_values($bypass_values)));
+                // Ensure we have a sequential array
+                $bypass_values = array_values($bypass_values);
                 
-                // Update the settings values for LearnDash
+                // Store as JSON
+                update_post_meta($post_id, 'bypass_drip_content', wp_json_encode($bypass_values));
+                
+                // Update LearnDash settings
                 $settings_values['bypass_drip_content'] = $bypass_values;
             }
         }
