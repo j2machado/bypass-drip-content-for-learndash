@@ -39,7 +39,7 @@ jQuery(document).ready(function($) {
                 var $result = $(
                     '<div class="select2-result-option' + 
                     (data.selected ? ' select2-result-option--selected' : '') + 
-                    '">' + data.text + '</div>'
+                    '" data-id="' + data.id + '">' + data.text + '</div>'
                 );
                 
                 return $result;
@@ -59,6 +59,35 @@ jQuery(document).ready(function($) {
             } else {
                 $container.removeClass('has-bypass-users');
             }
+
+            // Update selected state for all options in the dropdown
+            setTimeout(function() {
+                $('.select2-results__options .select2-result-option').each(function() {
+                    const $option = $(this);
+                    const optionId = $option.data('id');
+                    if (values.includes(optionId)) {
+                        $option.addClass('select2-result-option--selected');
+                    } else {
+                        $option.removeClass('select2-result-option--selected');
+                    }
+                });
+            }, 0);
+        });
+
+        // Also update on dropdown open to ensure consistency
+        $select.on('select2:open', function() {
+            const values = $(this).val() || [];
+            setTimeout(function() {
+                $('.select2-results__options .select2-result-option').each(function() {
+                    const $option = $(this);
+                    const optionId = $option.data('id');
+                    if (values.includes(optionId)) {
+                        $option.addClass('select2-result-option--selected');
+                    } else {
+                        $option.removeClass('select2-result-option--selected');
+                    }
+                });
+            }, 0);
         });
 
         // Trigger initial state
