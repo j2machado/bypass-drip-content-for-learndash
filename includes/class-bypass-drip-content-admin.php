@@ -48,9 +48,26 @@ class Bypass_Drip_Content_Admin {
                 array_combine($saved_values, $saved_values)
             );
 
+            $enable_bypass = get_post_meta($post_id, 'bypass_drip_content_enabled', true);
+            
+            $fields['bypass_drip_content_enabled'] = array(
+                'name'          => 'bypass_drip_content_enabled',
+                'label'         => __('Enable Bypass Drip Content', 'bypass-drip-content-ld'),
+                'type'          => 'checkbox-switch',
+                'class'         => 'bypass-drip-content-toggle',
+                'value'         => $enable_bypass,
+                'default'       => '',
+                'child_section_state' => $enable_bypass === 'on' ? 'open' : 'closed',
+                'help_text'     => __('Enable to allow specific users to bypass drip content for this lesson.', 'bypass-drip-content-ld'),
+                'options'       => array(
+                    'on'  => __('Allow specific users to bypass drip content for this lesson', 'bypass-drip-content-ld'),
+                    ''    => '',
+                ),
+            );
+
             $fields['bypass_drip_content'] = array(
                 'name'          => 'bypass_drip_content',
-                'label'         => __('Bypass Drip Content', 'bypass-drip-content-ld'),
+                'label'         => __('Select Users to Bypass', 'bypass-drip-content-ld'),
                 'type'          => 'select',
                 'class'         => 'bypass-drip-content-select',
                 'multiple'      => true,
@@ -58,6 +75,8 @@ class Bypass_Drip_Content_Admin {
                 'default'       => array(),
                 'value'         => $saved_values,
                 'options'       => $all_options,
+                'parent_setting' => 'bypass_drip_content_enabled',
+                'parent_setting_trigger' => 'on',
                 'attrs'         => array(
                     'data-tags' => 'true',
                     'data-placeholder' => __('Select or add users', 'bypass-drip-content-ld'),
@@ -76,6 +95,11 @@ class Bypass_Drip_Content_Admin {
             $post_id = get_the_ID();
             
             if ($post_id) {
+                // Save the enabled state
+                $enable_bypass = isset($_POST[$metabox_key]['bypass_drip_content_enabled']) ? $_POST[$metabox_key]['bypass_drip_content_enabled'] : '';
+                update_post_meta($post_id, 'bypass_drip_content_enabled', $enable_bypass);
+                $settings_values['bypass_drip_content_enabled'] = $enable_bypass;
+
                 // Get the raw POST data for our field
                 $raw_values = isset($_POST[$metabox_key]['bypass_drip_content']) ? $_POST[$metabox_key]['bypass_drip_content'] : array();
                 
