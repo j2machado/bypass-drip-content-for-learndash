@@ -1,13 +1,39 @@
-/* Styles for the bypass drip content checkbox */
-.bypass-drip-content-checkbox {
+/* Styles for the bypass drip content select field */
+.bypass-drip-content-select {
+    width: 100%;
+    max-width: 100%;
     margin-top: 10px !important;
 }
 
-.bypass-drip-content-checkbox + .ld-tooltip {
-    margin-left: 8px;
+/* Custom Select2 styling */
+.select2-container--default .select2-selection--multiple {
+    border-color: #8c8f94;
+    border-radius: 4px;
 }
 
-/* Add some emphasis to the bypass option when enabled */
-.bypass-drip-content-checkbox:checked {
-    border-color: #28a745;
+.select2-container--default.select2-container--focus .select2-selection--multiple {
+    border-color: #2271b1;
+    box-shadow: 0 0 0 1px #2271b1;
+}
+
+/* Style for selected items */
+.select2-container--default .select2-selection--multiple .select2-selection__choice {
+    background-color: #2271b1;
+    border-color: #2271b1;
+    color: #fff;
+    padding: 4px 8px;
+}
+
+.select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+    color: #fff;
+    margin-right: 5px;
+}
+
+.select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
+    color: #d63638;
+}
+
+/* Highlight container when has values */
+.sfwd_input.has-bypass-users .select2-container .select2-selection {
+    border-color: #2271b1;
 }

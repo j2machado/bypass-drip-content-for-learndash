@@ -20,19 +20,48 @@ class Bypass_Drip_Content_Admin {
     /**
      * Add bypass drip content field to LearnDash lesson access settings
      */
+    /**
+     * Get dummy users for testing
+     */
+    private function get_dummy_users() {
+        return array(
+            'john.doe' => 'John Doe',
+            'jane.smith' => 'Jane Smith',
+            'bob.wilson' => 'Bob Wilson',
+            'alice.brown' => 'Alice Brown',
+            'mike.davis' => 'Mike Davis'
+        );
+    }
+
     public function add_bypass_drip_field($fields, $metabox_key) {
         // Only add the field to lesson access settings
         if ($metabox_key === 'learndash-lesson-access-settings') {
             $post_id = get_the_ID();
             
+            $saved_values = get_post_meta($post_id, 'bypass_drip_content', true);
+            $saved_values = !empty($saved_values) ? json_decode($saved_values, true) : array();
+
+            // Get dummy users and merge with saved values to create options
+            $dummy_users = $this->get_dummy_users();
+            $all_options = array_merge(
+                $dummy_users,
+                array_combine($saved_values, $saved_values)
+            );
+
             $fields['bypass_drip_content'] = array(
                 'name'          => 'bypass_drip_content',
                 'label'         => __('Bypass Drip Content', 'bypass-drip-content-ld'),
-                'type'          => 'text',
-                'class'         => 'bypass-drip-content-checkbox',
-                'help_text'     => __('Type the name of users allowed to bypass the drip content.', 'bypass-drip-content-ld'),
-                'default'       => '',
-                'value'         => get_post_meta($post_id, 'bypass_drip_content', true),
+                'type'          => 'select',
+                'class'         => 'bypass-drip-content-select',
+                'multiple'      => 'multiple',
+                'help_text'     => __('Select existing users or type new usernames to add them.', 'bypass-drip-content-ld'),
+                'default'       => array(),
+                'value'         => $saved_values,
+                'options'       => $all_options,
+                'attrs'         => array(
+                    'data-tags' => 'true',
+                    'data-placeholder' => __('Select or add users', 'bypass-drip-content-ld')
+                )
             );
         }
         return $fields;
@@ -46,10 +75,23 @@ class Bypass_Drip_Content_Admin {
             $post_id = get_the_ID();
             
             if ($post_id) {
-                $bypass_value = isset($_POST[$metabox_key]['bypass_drip_content']) ? 
-                    sanitize_text_field($_POST[$metabox_key]['bypass_drip_content']) : '';
+                // Get the raw POST data for our field
+                $raw_values = isset($_POST[$metabox_key]['bypass_drip_content']) ? $_POST[$metabox_key]['bypass_drip_content'] : '';
                 
-                update_post_meta($post_id, 'bypass_drip_content', $bypass_value);
+                // Convert to array if string (handles both array and string inputs)
+                $bypass_values = is_array($raw_values) ? $raw_values : array_filter(array($raw_values));
+                
+                // Sanitize each value
+                $bypass_values = array_map('sanitize_text_field', $bypass_values);
+                
+                // Remove any empty values
+                $bypass_values = array_filter($bypass_values);
+                
+                // Store as JSON
+                update_post_meta($post_id, 'bypass_drip_content', json_encode(array_values($bypass_values)));
+                
+                // Update the settings values for LearnDash
+                $settings_values['bypass_drip_content'] = $bypass_values;
             }
         }
         return $settings_values;
@@ -63,17 +105,34 @@ class Bypass_Drip_Content_Admin {
         
         // Only enqueue on lesson edit screen
         if ($hook == 'post.php' && $post && $post->post_type === 'sfwd-lessons') {
+            // Enqueue Select2
+            wp_enqueue_style(
+                'select2',
+                'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css',
+                array(),
+                '4.1.0-rc.0'
+            );
+
+            wp_enqueue_script(
+                'select2',
+                'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js',
+                array('jquery'),
+                '4.1.0-rc.0',
+                true
+            );
+
+            // Enqueue our custom assets
             wp_enqueue_style(
                 'bypass-drip-content-admin',
                 BDCLD_PLUGIN_URL . 'assets/css/admin.css',
-                array(),
+                array('select2'),
                 BDCLD_VERSION
             );
 
             wp_enqueue_script(
                 'bypass-drip-content-admin',
                 BDCLD_PLUGIN_URL . 'assets/js/admin.js',
-                array('jquery'),
+                array('jquery', 'select2'),
                 BDCLD_VERSION,
                 true
             );
