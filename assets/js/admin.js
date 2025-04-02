@@ -20,22 +20,11 @@ jQuery(document).ready(function($) {
             width: '100%',
             allowClear: true,
             multiple: true,
-            tags: true,
-            tokenSeparators: [',', ' '],
             placeholder: $select.data('placeholder') || 'Select or add users',
             closeOnSelect: false,
-            createTag: function(params) {
-                const term = $.trim(params.term);
-                
-                if (term === '') {
-                    return null;
-                }
-                
-                return {
-                    id: term,
-                    text: term,
-                    newTag: true
-                };
+            createTag: function() {
+                // Prevent tag creation
+                return null;
             },
             templateResult: function(data) {
                 if (data.loading) return data.text;
