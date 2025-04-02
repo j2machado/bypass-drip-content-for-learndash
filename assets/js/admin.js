@@ -33,6 +33,17 @@ jQuery(document).ready(function($) {
                     newTag: true
                 };
             },
+            templateResult: function(data) {
+                if (data.loading) return data.text;
+                
+                var $result = $(
+                    '<div class="select2-result-option' + 
+                    (data.selected ? ' select2-result-option--selected' : '') + 
+                    '">' + data.text + '</div>'
+                );
+                
+                return $result;
+            },
             templateSelection: function(data, container) {
                 return data.text;
             }

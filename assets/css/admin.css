@@ -58,3 +58,31 @@ input.select2-search__field, li.select2-search.select2-search--inline{
     margin:unset;
     padding:unset;
 }
+
+/* Dropdown option styling */
+.select2-results__option {
+    padding: 6px 8px !important;
+    margin: unset;
+}
+
+.select2-result-option {
+    padding: 10px 5px;
+    margin: unset;
+}
+
+.select2-result-option:hover {
+    background-color: #f0f6fc;
+}
+
+.select2-result-option--selected {
+    background-color: #f0f6fc;
+    position: relative;
+}
+
+.select2-result-option--selected::before {
+    content: '\2713';
+    position: absolute;
+    left: -15px;
+    color: #2271b1;
+    padding: 4px 0px;
+}
