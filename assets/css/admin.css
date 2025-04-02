@@ -59,6 +59,11 @@ input.select2-search__field, li.select2-search.select2-search--inline{
     padding:unset;
 }
 
+.sfwd_options .select2-container .select2-search--inline .select2-search__field{
+    margin:unset!important;
+    padding:unset!important;
+}
+
 /* Dropdown option styling */
 .select2-results__option {
     padding: 6px 8px !important;
