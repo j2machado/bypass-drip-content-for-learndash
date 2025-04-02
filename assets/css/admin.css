@@ -8,9 +8,26 @@
 /* Custom Select2 styling */
 .sfwd_options .select2-container--default .select2-selection--multiple,
 .sfwd_options .select2-container--default.select2-container--focus .select2-selection--multiple {
-    border: none !important;
     border-radius: 4px;
     box-shadow: none !important;
+    min-height: 36px;
+    height: auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 4px;
+}
+
+.select2-container--default .select2-selection--multiple .select2-selection__rendered {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 0 !important;
+    width: 100%;
+}
+
+ul.select2-selection__rendered{
+    margin:unset;
 }
 
 /* Style for selected items */
@@ -19,6 +36,8 @@
     border-color: #2271b1;
     color: #fff;
     padding: 4px 4px 4px 20px;
+    margin: 6px 0px;
+    flex-shrink: 0;
 }
 
 .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
@@ -33,4 +52,9 @@
 /* Highlight container when has values */
 .sfwd_input.has-bypass-users .select2-container .select2-selection {
     border-color: #2271b1;
+}
+
+input.select2-search__field, li.select2-search.select2-search--inline{
+    margin:unset;
+    padding:unset;
 }
