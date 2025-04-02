@@ -60,8 +60,20 @@ input.select2-search__field, li.select2-search.select2-search--inline{
 }
 
 .sfwd_options .select2-container .select2-search--inline .select2-search__field{
-    margin:unset!important;
-    padding:unset!important;
+    margin: 6px !important;
+    padding: 0 !important;
+    min-width: 150px !important;
+}
+
+.select2-container--default .select2-selection--multiple .select2-selection__placeholder {
+    color: #757575;
+    display: inline-block !important;
+    margin: 6px !important;
+}
+
+/* Hide placeholder when items are selected */
+.select2-container--default .select2-selection--multiple.select2-selection--multiple--has-items .select2-selection__placeholder {
+    display: none !important;
 }
 
 /* Dropdown option styling */
