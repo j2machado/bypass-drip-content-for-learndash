@@ -94,15 +94,14 @@ class Bypass_Drip_Content_Admin {
                 'type'          => 'select',
                 'class'         => 'bypass-drip-content-select',
                 'multiple'      => true,
-                'help_text'     => __('Select existing users or type new usernames to add them.', 'bypass-drip-content-ld'),
+                'help_text'     => __('Select users from the list to bypass drip content for this lesson.', 'bypass-drip-content-ld'),
                 'default'       => array(),
                 'value'         => $saved_values,
                 'options'       => $all_options,
                 'parent_setting' => 'bypass_drip_content_enabled',
                 'parent_setting_trigger' => 'on',
                 'attrs'         => array(
-                    'data-tags' => 'true',
-                    'data-placeholder' => __('Select or add users', 'bypass-drip-content-ld'),
+                    'data-placeholder' => __('Select users', 'bypass-drip-content-ld'),
                     'multiple' => 'multiple'
                 )
             );
@@ -113,15 +112,14 @@ class Bypass_Drip_Content_Admin {
                 'type'          => 'select',
                 'class'         => 'bypass-drip-content-select',
                 'multiple'      => true,
-                'help_text'     => __('Select existing groups or type new group names to add them.', 'bypass-drip-content-ld'),
+                'help_text'     => __('Select groups from the list to bypass drip content for this lesson.', 'bypass-drip-content-ld'),
                 'default'       => array(),
                 'value'         => $saved_group_values,
                 'options'       => $all_group_options,
                 'parent_setting' => 'bypass_drip_content_enabled',
                 'parent_setting_trigger' => 'on',
                 'attrs'         => array(
-                    'data-tags' => 'true',
-                    'data-placeholder' => __('Select or add groups', 'bypass-drip-content-ld'),
+                    'data-placeholder' => __('Select groups', 'bypass-drip-content-ld'),
                     'multiple' => 'multiple'
                 )
             );
