@@ -6,14 +6,11 @@
 }
 
 /* Custom Select2 styling */
-.select2-container--default .select2-selection--multiple {
-    border-color: #8c8f94;
+.sfwd_options .select2-container--default .select2-selection--multiple,
+.sfwd_options .select2-container--default.select2-container--focus .select2-selection--multiple {
+    border: none !important;
     border-radius: 4px;
-}
-
-.select2-container--default.select2-container--focus .select2-selection--multiple {
-    border-color: #2271b1;
-    box-shadow: 0 0 0 1px #2271b1;
+    box-shadow: none !important;
 }
 
 /* Style for selected items */
@@ -21,7 +18,7 @@
     background-color: #2271b1;
     border-color: #2271b1;
     color: #fff;
-    padding: 4px 8px;
+    padding: 4px 4px 4px 20px;
 }
 
 .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
