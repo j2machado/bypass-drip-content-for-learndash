@@ -33,6 +33,19 @@ class Bypass_Drip_Content_Admin {
         );
     }
 
+    /**
+     * Get dummy groups for testing
+     */
+    private function get_dummy_groups() {
+        return array(
+            'beginners' => 'Beginners Group',
+            'intermediate' => 'Intermediate Group',
+            'advanced' => 'Advanced Group',
+            'premium' => 'Premium Members',
+            'vip' => 'VIP Members'
+        );
+    }
+
     public function add_bypass_drip_field($fields, $metabox_key) {
         // Only add the field to lesson access settings
         if ($metabox_key === 'learndash-lesson-access-settings') {
@@ -41,11 +54,21 @@ class Bypass_Drip_Content_Admin {
             $saved_values = get_post_meta($post_id, 'bypass_drip_content', true);
             $saved_values = !empty($saved_values) ? json_decode($saved_values, true) : array();
 
+            $saved_group_values = get_post_meta($post_id, 'bypass_drip_content_groups', true);
+            $saved_group_values = !empty($saved_group_values) ? json_decode($saved_group_values, true) : array();
+
             // Get dummy users and merge with saved values to create options
             $dummy_users = $this->get_dummy_users();
             $all_options = array_merge(
                 $dummy_users,
                 array_combine($saved_values, $saved_values)
+            );
+
+            // Get dummy groups and merge with saved values to create options
+            $dummy_groups = $this->get_dummy_groups();
+            $all_group_options = array_merge(
+                $dummy_groups,
+                array_combine($saved_group_values, $saved_group_values)
             );
 
             $enable_bypass = get_post_meta($post_id, 'bypass_drip_content_enabled', true);
@@ -80,6 +103,25 @@ class Bypass_Drip_Content_Admin {
                 'attrs'         => array(
                     'data-tags' => 'true',
                     'data-placeholder' => __('Select or add users', 'bypass-drip-content-ld'),
+                    'multiple' => 'multiple'
+                )
+            );
+
+            $fields['bypass_drip_content_groups'] = array(
+                'name'          => 'bypass_drip_content_groups',
+                'label'         => __('Select Groups to Bypass', 'bypass-drip-content-ld'),
+                'type'          => 'select',
+                'class'         => 'bypass-drip-content-select',
+                'multiple'      => true,
+                'help_text'     => __('Select existing groups or type new group names to add them.', 'bypass-drip-content-ld'),
+                'default'       => array(),
+                'value'         => $saved_group_values,
+                'options'       => $all_group_options,
+                'parent_setting' => 'bypass_drip_content_enabled',
+                'parent_setting_trigger' => 'on',
+                'attrs'         => array(
+                    'data-tags' => 'true',
+                    'data-placeholder' => __('Select or add groups', 'bypass-drip-content-ld'),
                     'multiple' => 'multiple'
                 )
             );
@@ -119,11 +161,32 @@ class Bypass_Drip_Content_Admin {
                 // Ensure we have a sequential array
                 $bypass_values = array_values($bypass_values);
                 
-                // Store as JSON
+                // Store users as JSON
                 update_post_meta($post_id, 'bypass_drip_content', wp_json_encode($bypass_values));
-                
-                // Update LearnDash settings
                 $settings_values['bypass_drip_content'] = $bypass_values;
+
+                // Handle groups
+                $raw_group_values = isset($_POST[$metabox_key]['bypass_drip_content_groups']) ? $_POST[$metabox_key]['bypass_drip_content_groups'] : array();
+                
+                // Ensure we have an array
+                if (!is_array($raw_group_values)) {
+                    $raw_group_values = array($raw_group_values);
+                }
+                
+                // Clean up the group values
+                $bypass_group_values = array_map(function($value) {
+                    return sanitize_text_field(trim($value));
+                }, $raw_group_values);
+                
+                // Remove any empty values
+                $bypass_group_values = array_filter($bypass_group_values);
+                
+                // Ensure we have a sequential array
+                $bypass_group_values = array_values($bypass_group_values);
+                
+                // Store groups as JSON
+                update_post_meta($post_id, 'bypass_drip_content_groups', wp_json_encode($bypass_group_values));
+                $settings_values['bypass_drip_content_groups'] = $bypass_group_values;
             }
         }
         return $settings_values;
