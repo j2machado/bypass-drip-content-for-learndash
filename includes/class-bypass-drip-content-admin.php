@@ -16,8 +16,9 @@ class Bypass_Drip_Content_Admin {
         // Add custom admin scripts and styles
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_assets'));
 
-        // Add AJAX handler for user search
+        // Add AJAX handlers for user and group search
         add_action('wp_ajax_search_users_for_bypass', array($this, 'search_users_for_bypass'));
+        add_action('wp_ajax_search_groups_for_bypass', array($this, 'search_groups_for_bypass'));
     }
 
     /**
@@ -62,6 +63,47 @@ class Bypass_Drip_Content_Admin {
     }
 
     /**
+     * AJAX handler for searching groups
+     */
+    public function search_groups_for_bypass() {
+        check_ajax_referer('bypass_drip_content_nonce', 'nonce');
+
+        $search = isset($_GET['term']) ? sanitize_text_field($_GET['term']) : '';
+        $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
+
+        $args = array(
+            'post_type'      => 'groups',
+            'post_status'    => 'publish',
+            's'              => $search,
+            'posts_per_page' => 10,
+            'paged'          => $page,
+            'orderby'        => 'title',
+            'order'          => 'ASC'
+        );
+
+        $group_query = new WP_Query($args);
+        $groups = array();
+
+        if ($group_query->have_posts()) {
+            while ($group_query->have_posts()) {
+                $group_query->the_post();
+                $groups[] = array(
+                    'id'   => get_the_ID(),
+                    'text' => get_the_title()
+                );
+            }
+            wp_reset_postdata();
+        }
+
+        wp_send_json(array(
+            'results'    => $groups,
+            'pagination' => array(
+                'more' => $page < $group_query->max_num_pages
+            )
+        ));
+    }
+
+    /**
      * Add bypass drip content field to LearnDash lesson access settings
      */
     /**
@@ -101,6 +143,7 @@ class Bypass_Drip_Content_Admin {
 
             $saved_group_values = get_post_meta($post_id, 'bypass_drip_content_groups', true);
             $saved_group_values = !empty($saved_group_values) ? json_decode($saved_group_values, true) : array();
+            $saved_groups_data = $this->get_groups_data($saved_group_values);
 
             // Get dummy users and merge with saved values to create options
             $dummy_users = $this->get_dummy_users();
@@ -263,6 +306,22 @@ class Bypass_Drip_Content_Admin {
         return $users_data;
     }
 
+    private function get_groups_data($group_ids) {
+        $groups_data = array();
+        if (!empty($group_ids)) {
+            foreach ($group_ids as $group_id) {
+                $group = get_post($group_id);
+                if ($group && $group->post_type === 'groups') {
+                    $groups_data[] = array(
+                        'id'   => $group->ID,
+                        'text' => $group->post_title
+                    );
+                }
+            }
+        }
+        return $groups_data;
+    }
+
     public function enqueue_admin_assets($hook) {
         global $post;
         
@@ -272,6 +331,11 @@ class Bypass_Drip_Content_Admin {
             $saved_values = get_post_meta($post->ID, 'bypass_drip_content', true);
             $saved_values = !empty($saved_values) ? json_decode($saved_values, true) : array();
             $saved_users_data = $this->get_users_data($saved_values);
+
+            // Get saved groups for this lesson
+            $saved_group_values = get_post_meta($post->ID, 'bypass_drip_content_groups', true);
+            $saved_group_values = !empty($saved_group_values) ? json_decode($saved_group_values, true) : array();
+            $saved_groups_data = $this->get_groups_data($saved_group_values);
             // Enqueue Select2
             wp_enqueue_style(
                 'select2',
@@ -307,7 +371,8 @@ class Bypass_Drip_Content_Admin {
             wp_localize_script('bypass-drip-content-admin', 'bypassDripContent', array(
                 'ajaxurl' => admin_url('admin-ajax.php'),
                 'nonce'   => wp_create_nonce('bypass_drip_content_nonce'),
-                'savedUsers' => $saved_users_data
+                'savedUsers' => $saved_users_data,
+                'savedGroups' => $saved_groups_data
             ));
         }
     }

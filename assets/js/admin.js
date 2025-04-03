@@ -16,14 +16,22 @@ jQuery(document).ready(function($) {
             savedUsers: bypassDripContent.savedUsers
         });
         
-        // Initialize Select2 with AJAX for users dropdown
+        // Determine if this is a user or group select
         const isUserSelect = $select.attr('name').includes('bypass_drip_content]') && !$select.attr('name').includes('groups');
+        const isGroupSelect = $select.attr('name').includes('bypass_drip_content_groups');
 
-        // Pre-populate options with saved users
+        // Pre-populate options with saved data
         if (isUserSelect && bypassDripContent.savedUsers) {
             bypassDripContent.savedUsers.forEach(function(user) {
                 if (!$select.find(`option[value="${user.id}"]`).length) {
                     const option = new Option(user.text, user.id, true, true);
+                    $select.append(option);
+                }
+            });
+        } else if (isGroupSelect && bypassDripContent.savedGroups) {
+            bypassDripContent.savedGroups.forEach(function(group) {
+                if (!$select.find(`option[value="${group.id}"]`).length) {
+                    const option = new Option(group.text, group.id, true, true);
                     $select.append(option);
                 }
             });
@@ -81,6 +89,34 @@ jQuery(document).ready(function($) {
             initSelection: function(element, callback) {
                 if (bypassDripContent.savedUsers) {
                     callback(bypassDripContent.savedUsers);
+                }
+            }
+        } : isGroupSelect ? {
+            ajax: {
+                url: bypassDripContent.ajaxurl,
+                dataType: 'json',
+                delay: 250,
+                data: function(params) {
+                    return {
+                        action: 'search_groups_for_bypass',
+                        nonce: bypassDripContent.nonce,
+                        term: params.term,
+                        page: params.page || 1
+                    };
+                },
+                processResults: function(data, params) {
+                    params.page = params.page || 1;
+                    return {
+                        results: data.results,
+                        pagination: data.pagination
+                    };
+                },
+                cache: true
+            },
+            minimumInputLength: 2,
+            initSelection: function(element, callback) {
+                if (bypassDripContent.savedGroups) {
+                    callback(bypassDripContent.savedGroups);
                 }
             }
         } : {};
