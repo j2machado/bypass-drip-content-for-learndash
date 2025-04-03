@@ -179,8 +179,8 @@ class Bypass_Drip_Content_LearnDash {
      */
     private function init_hooks() {
         // Hook into LearnDash's drip content checks
-        //add_filter('learndash_content_drip_access', array($this, 'maybe_bypass_drip_content'), 10, 3);
         add_filter('ld_lesson_access_from__visible_after', array($this, 'maybe_bypass_lesson_timer'), 10, 3);
+        add_filter('ld_lesson_access_from__visible_after_specific_date', array($this, 'maybe_bypass_lesson_timer'), 10, 3);
         add_action('plugins_loaded', array($this, 'on_plugins_loaded'));
     }
 
