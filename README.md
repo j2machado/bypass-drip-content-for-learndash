@@ -2,6 +2,8 @@
 
 A WordPress plugin that provides granular control over LearnDash's drip-feed content functionality by allowing administrators to bypass drip scheduling for specific users and groups on a per-lesson basis.
 
+![Bypass Drip Content for LearnDash](https://obijuan.dev/wp-content/uploads/2025/04/Screenshot-from-2025-04-02-20-34-45.png)
+
 ## Features
 
 - **User-Level Bypass**: Select specific WordPress users to bypass drip-feed restrictions for individual lessons
@@ -76,7 +78,7 @@ A WordPress plugin that provides granular control over LearnDash's drip-feed con
 ## Support
 
 For bug reports or feature requests, please use the plugin's GitHub repository issue tracker or contact us
-at [hola@obijuan.dev](mailto:hola@obijuan.dev)
+at [support@obijuan.dev](mailto:support@obijuan.dev)
 
 ## License
 
