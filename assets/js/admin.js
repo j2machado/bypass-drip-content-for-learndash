@@ -12,11 +12,24 @@ jQuery(document).ready(function($) {
             placeholder: $select.data('placeholder'),
             currentValue: $select.val(),
             hasEmptyOption: $select.find('option[value=""]').length > 0,
-            optionsCount: $select.find('option').length
+            optionsCount: $select.find('option').length,
+            savedUsers: bypassDripContent.savedUsers
         });
         
-        // Initialize Select2
-        $select.select2({
+        // Initialize Select2 with AJAX for users dropdown
+        const isUserSelect = $select.attr('name').includes('bypass_drip_content]') && !$select.attr('name').includes('groups');
+
+        // Pre-populate options with saved users
+        if (isUserSelect && bypassDripContent.savedUsers) {
+            bypassDripContent.savedUsers.forEach(function(user) {
+                if (!$select.find(`option[value="${user.id}"]`).length) {
+                    const option = new Option(user.text, user.id, true, true);
+                    $select.append(option);
+                }
+            });
+        }
+
+        const baseConfig = {
             width: '100%',
             allowClear: true,
             multiple: true,
@@ -40,7 +53,40 @@ jQuery(document).ready(function($) {
             templateSelection: function(data, container) {
                 return data.text;
             }
-        });
+        };
+
+        const ajaxConfig = isUserSelect ? {
+            ajax: {
+                url: bypassDripContent.ajaxurl,
+                dataType: 'json',
+                delay: 250,
+                data: function(params) {
+                    return {
+                        action: 'search_users_for_bypass',
+                        nonce: bypassDripContent.nonce,
+                        term: params.term,
+                        page: params.page || 1
+                    };
+                },
+                processResults: function(data, params) {
+                    params.page = params.page || 1;
+                    return {
+                        results: data.results,
+                        pagination: data.pagination
+                    };
+                },
+                cache: true
+            },
+            minimumInputLength: 2,
+            initSelection: function(element, callback) {
+                if (bypassDripContent.savedUsers) {
+                    callback(bypassDripContent.savedUsers);
+                }
+            }
+        } : {};
+
+        // Merge configurations based on select type
+        $select.select2({ ...baseConfig, ...ajaxConfig });
 
         // Add custom styling when values change
         $select.on('change', function() {
@@ -56,23 +102,26 @@ jQuery(document).ready(function($) {
                 $selection.removeClass('select2-selection--multiple--has-items');
             }
 
-            // Update selected state for all options in the dropdown
-            setTimeout(function() {
-                $('.select2-results__options .select2-result-option').each(function() {
-                    const $option = $(this);
-                    const optionId = $option.data('id');
-                    if (values.includes(optionId)) {
-                        $option.addClass('select2-result-option--selected');
-                    } else {
-                        $option.removeClass('select2-result-option--selected');
-                    }
-                });
-            }, 0);
+            // Log value changes for debugging
+            console.log('Select2 value changed:', {
+                id: $(this).attr('id'),
+                newValue: values,
+                hasPlaceholder: $(this).data('placeholder') !== undefined,
+                placeholderText: $(this).data('placeholder')
+            });
         });
 
-        // Also update on dropdown open to ensure consistency
+        // Add debugging events
         $select.on('select2:open', function() {
             const values = $(this).val() || [];
+            console.log('Select2 opened:', {
+                id: $(this).attr('id'),
+                value: values,
+                hasPlaceholder: $(this).data('placeholder') !== undefined,
+                placeholderText: $(this).data('placeholder')
+            });
+
+            // Update selected state in dropdown
             setTimeout(function() {
                 $('.select2-results__options .select2-result-option').each(function() {
                     const $option = $(this);
@@ -86,65 +135,14 @@ jQuery(document).ready(function($) {
             }, 0);
         });
 
-        // Add debugging events
-        $select.on('select2:open', function() {
-            console.log('Select2 opened:', {
-                id: $select.attr('id'),
-                value: $select.val(),
-                hasPlaceholder: $select.next('.select2-container').find('.select2-selection__placeholder').length > 0,
-                placeholderText: $select.next('.select2-container').find('.select2-selection__placeholder').text()
-            });
-        });
-
-        $select.on('change', function() {
-            console.log('Select2 value changed:', {
-                id: $select.attr('id'),
-                newValue: $select.val(),
-                hasPlaceholder: $select.next('.select2-container').find('.select2-selection__placeholder').length > 0,
-                placeholderText: $select.next('.select2-container').find('.select2-selection__placeholder').text()
-            });
-        });
-
-        // Log Select2 state after initialization
+        // Log post-initialization state
         setTimeout(() => {
             console.log('Select2 post-initialization state:', {
                 id: $select.attr('id'),
                 data: $select.select2('data'),
                 value: $select.val(),
-                hasPlaceholder: $select.next('.select2-container').find('.select2-selection__placeholder').length > 0,
-                placeholderText: $select.next('.select2-container').find('.select2-selection__placeholder').text(),
-                containerHtml: $select.next('.select2-container').html()
-            });
-        }, 100);
-
-        // Add debugging events
-        $select.on('select2:open', function() {
-            console.log('Select2 opened:', {
-                id: $select.attr('id'),
-                value: $select.val(),
-                hasPlaceholder: $select.next('.select2-container').find('.select2-selection__placeholder').length > 0,
-                placeholderText: $select.next('.select2-container').find('.select2-selection__placeholder').text()
-            });
-        });
-
-        $select.on('change', function() {
-            console.log('Select2 value changed:', {
-                id: $select.attr('id'),
-                newValue: $select.val(),
-                hasPlaceholder: $select.next('.select2-container').find('.select2-selection__placeholder').length > 0,
-                placeholderText: $select.next('.select2-container').find('.select2-selection__placeholder').text()
-            });
-        });
-
-        // Log Select2 state after initialization
-        setTimeout(() => {
-            console.log('Select2 post-initialization state:', {
-                id: $select.attr('id'),
-                data: $select.select2('data'),
-                value: $select.val(),
-                hasPlaceholder: $select.next('.select2-container').find('.select2-selection__placeholder').length > 0,
-                placeholderText: $select.next('.select2-container').find('.select2-selection__placeholder').text(),
-                containerHtml: $select.next('.select2-container').html()
+                hasPlaceholder: $select.data('placeholder') !== undefined,
+                placeholderText: $select.data('placeholder')
             });
         }, 100);
 

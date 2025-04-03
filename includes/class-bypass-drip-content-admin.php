@@ -15,6 +15,50 @@ class Bypass_Drip_Content_Admin {
         
         // Add custom admin scripts and styles
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_assets'));
+
+        // Add AJAX handler for user search
+        add_action('wp_ajax_search_users_for_bypass', array($this, 'search_users_for_bypass'));
+    }
+
+    /**
+     * AJAX handler for searching users
+     */
+    public function search_users_for_bypass() {
+        check_ajax_referer('bypass_drip_content_nonce', 'nonce');
+
+        $search = isset($_GET['term']) ? sanitize_text_field($_GET['term']) : '';
+        $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
+
+        $args = array(
+            'search'         => '*' . $search . '*',
+            'search_columns' => array('user_login', 'user_email', 'user_nicename', 'display_name'),
+            'number'         => 10,
+            'offset'         => ($page - 1) * 10,
+            'orderby'       => 'display_name',
+            'order'         => 'ASC'
+        );
+
+        $user_query = new WP_User_Query($args);
+        $users = array();
+
+        if (!empty($user_query->get_results())) {
+            foreach ($user_query->get_results() as $user) {
+                $users[] = array(
+                    'id'   => $user->ID,
+                    'text' => sprintf('%s (%s)', $user->display_name, $user->user_email)
+                );
+            }
+        }
+
+        $total_users = $user_query->get_total();
+        $more = ($page * 10) < $total_users;
+
+        wp_send_json(array(
+            'results'    => $users,
+            'pagination' => array(
+                'more' => $more
+            )
+        ));
     }
 
     /**
@@ -53,6 +97,7 @@ class Bypass_Drip_Content_Admin {
             
             $saved_values = get_post_meta($post_id, 'bypass_drip_content', true);
             $saved_values = !empty($saved_values) ? json_decode($saved_values, true) : array();
+            $saved_users_data = $this->get_users_data($saved_values);
 
             $saved_group_values = get_post_meta($post_id, 'bypass_drip_content_groups', true);
             $saved_group_values = !empty($saved_group_values) ? json_decode($saved_group_values, true) : array();
@@ -97,7 +142,7 @@ class Bypass_Drip_Content_Admin {
                 'help_text'     => __('Select users from the list to bypass drip content for this lesson.', 'bypass-drip-content-ld'),
                 'default'       => array(),
                 'value'         => $saved_values,
-                'options'       => $all_options,
+                'options'       => $saved_users_data, // Pre-populate with saved users
                 'parent_setting' => 'bypass_drip_content_enabled',
                 'parent_setting_trigger' => 'on',
                 'attrs'         => array(
@@ -193,11 +238,40 @@ class Bypass_Drip_Content_Admin {
     /**
      * Enqueue admin scripts and styles
      */
+    /**
+     * Get user data for saved user IDs
+     *
+     * @param array $user_ids Array of user IDs
+     * @return array Array of user data with id and text
+     */
+    private function get_users_data($user_ids) {
+        $users_data = array();
+        if (!empty($user_ids)) {
+            $users = get_users(array(
+                'include' => $user_ids,
+                'orderby' => 'display_name',
+                'order'   => 'ASC'
+            ));
+
+            foreach ($users as $user) {
+                $users_data[] = array(
+                    'id'   => $user->ID,
+                    'text' => sprintf('%s (%s)', $user->display_name, $user->user_email)
+                );
+            }
+        }
+        return $users_data;
+    }
+
     public function enqueue_admin_assets($hook) {
         global $post;
         
         // Only enqueue on lesson edit screen
         if ($hook == 'post.php' && $post && $post->post_type === 'sfwd-lessons') {
+            // Get saved users for this lesson
+            $saved_values = get_post_meta($post->ID, 'bypass_drip_content', true);
+            $saved_values = !empty($saved_values) ? json_decode($saved_values, true) : array();
+            $saved_users_data = $this->get_users_data($saved_values);
             // Enqueue Select2
             wp_enqueue_style(
                 'select2',
@@ -229,6 +303,12 @@ class Bypass_Drip_Content_Admin {
                 BDCLD_VERSION,
                 true
             );
+
+            wp_localize_script('bypass-drip-content-admin', 'bypassDripContent', array(
+                'ajaxurl' => admin_url('admin-ajax.php'),
+                'nonce'   => wp_create_nonce('bypass_drip_content_nonce'),
+                'savedUsers' => $saved_users_data
+            ));
         }
     }
 }
