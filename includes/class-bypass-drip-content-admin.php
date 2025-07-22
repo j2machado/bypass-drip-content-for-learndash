@@ -27,7 +27,7 @@ class Bypass_Drip_Content_Admin {
     public function search_users_for_bypass() {
         check_ajax_referer('bypass_drip_content_nonce', 'nonce');
 
-        $search = isset($_GET['term']) ? sanitize_text_field($_GET['term']) : '';
+        $search = isset($_GET['term']) ? sanitize_text_field(wp_unslash($_GET['term'])) : '';
         $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
 
         $args = array(
@@ -68,7 +68,7 @@ class Bypass_Drip_Content_Admin {
     public function search_groups_for_bypass() {
         check_ajax_referer('bypass_drip_content_nonce', 'nonce');
 
-        $search = isset($_GET['term']) ? sanitize_text_field($_GET['term']) : '';
+        $search = isset($_GET['term']) ? sanitize_text_field(wp_unslash($_GET['term'])) : '';
         $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
 
         $args = array(
@@ -163,51 +163,51 @@ class Bypass_Drip_Content_Admin {
             
             $fields['bypass_drip_content_enabled'] = array(
                 'name'          => 'bypass_drip_content_enabled',
-                'label'         => __('Enable Bypass Drip Content', 'bypass-drip-content-ld'),
+                'label'         => __('Enable Bypass Drip Content', 'bypass-drip-content-for-learndash'),
                 'type'          => 'checkbox-switch',
                 'class'         => 'bypass-drip-content-toggle',
                 'value'         => $enable_bypass,
                 'default'       => '',
                 'child_section_state' => $enable_bypass === 'on' ? 'open' : 'closed',
-                'help_text'     => __('Enable to allow specific users to bypass drip content for this lesson.', 'bypass-drip-content-ld'),
+                'help_text'     => __('Enable to allow specific users to bypass drip content for this lesson.', 'bypass-drip-content-for-learndash'),
                 'options'       => array(
-                    'on'  => __('Allow specific users to bypass drip content for this lesson', 'bypass-drip-content-ld'),
+                    'on'  => __('Allow specific users to bypass drip content for this lesson', 'bypass-drip-content-for-learndash'),
                     ''    => '',
                 ),
             );
 
             $fields['bypass_drip_content'] = array(
                 'name'          => 'bypass_drip_content',
-                'label'         => __('Select Users to Bypass', 'bypass-drip-content-ld'),
+                'label'         => __('Select Users to Bypass', 'bypass-drip-content-for-learndash'),
                 'type'          => 'select',
                 'class'         => 'bypass-drip-content-select',
                 'multiple'      => true,
-                'help_text'     => __('Select users from the list to bypass drip content for this lesson.', 'bypass-drip-content-ld'),
+                'help_text'     => __('Select users from the list to bypass drip content for this lesson.', 'bypass-drip-content-for-learndash'),
                 'default'       => array(),
                 'value'         => $saved_values,
                 'options'       => $saved_users_data, // Pre-populate with saved users
                 'parent_setting' => 'bypass_drip_content_enabled',
                 'parent_setting_trigger' => 'on',
                 'attrs'         => array(
-                    'data-placeholder' => __('Select users', 'bypass-drip-content-ld'),
+                    'data-placeholder' => __('Select users', 'bypass-drip-content-for-learndash'),
                     'multiple' => 'multiple'
                 )
             );
 
             $fields['bypass_drip_content_groups'] = array(
                 'name'          => 'bypass_drip_content_groups',
-                'label'         => __('Select Groups to Bypass', 'bypass-drip-content-ld'),
+                'label'         => __('Select Groups to Bypass', 'bypass-drip-content-for-learndash'),
                 'type'          => 'select',
                 'class'         => 'bypass-drip-content-select',
                 'multiple'      => true,
-                'help_text'     => __('Select groups from the list to bypass drip content for this lesson.', 'bypass-drip-content-ld'),
+                'help_text'     => __('Select groups from the list to bypass drip content for this lesson.', 'bypass-drip-content-for-learndash'),
                 'default'       => array(),
                 'value'         => $saved_group_values,
                 'options'       => $all_group_options,
                 'parent_setting' => 'bypass_drip_content_enabled',
                 'parent_setting_trigger' => 'on',
                 'attrs'         => array(
-                    'data-placeholder' => __('Select groups', 'bypass-drip-content-ld'),
+                    'data-placeholder' => __('Select groups', 'bypass-drip-content-for-learndash'),
                     'multiple' => 'multiple'
                 )
             );
@@ -224,8 +224,11 @@ class Bypass_Drip_Content_Admin {
             
             if ($post_id) {
                 // Save the enabled state
-                $enable_bypass = isset($_POST[$metabox_key]['bypass_drip_content_enabled']) ? $_POST[$metabox_key]['bypass_drip_content_enabled'] : '';
-                update_post_meta($post_id, 'bypass_drip_content_enabled', $enable_bypass);
+                // Verify nonce before form submission
+                if (isset($_POST[$metabox_key.'_nonce']) && wp_verify_nonce(sanitize_text_field(wp_unslash($_POST[$metabox_key.'_nonce'])), $metabox_key)) {
+                    $enable_bypass = isset($_POST[$metabox_key]['bypass_drip_content_enabled']) ? sanitize_text_field(wp_unslash($_POST[$metabox_key]['bypass_drip_content_enabled'])) : '';
+                    update_post_meta($post_id, 'bypass_drip_content_enabled', $enable_bypass);
+                }
                 $settings_values['bypass_drip_content_enabled'] = $enable_bypass;
 
                 // Get the raw POST data for our field
@@ -339,14 +342,14 @@ class Bypass_Drip_Content_Admin {
             // Enqueue Select2
             wp_enqueue_style(
                 'select2',
-                'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css',
+                plugin_dir_url( dirname( __FILE__ ) ) . 'assets/css/select2.min.css',
                 array(),
                 '4.1.0-rc.0'
             );
 
             wp_enqueue_script(
                 'select2',
-                'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js',
+                plugin_dir_url( dirname( __FILE__ ) ) . 'assets/js/select2.min.js',
                 array('jquery'),
                 '4.1.0-rc.0',
                 true

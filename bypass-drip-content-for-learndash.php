@@ -7,7 +7,7 @@
  * Author URI: https://obijuan.dev
  * License: GPL-2.0+
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain: bypass-drip-content-ld
+ * Text Domain: bypass-drip-content-for-learndash
  */
 
 // If this file is called directly, abort.
@@ -199,10 +199,11 @@ class Bypass_Drip_Content_LearnDash {
      */
     public function learndash_not_active_notice() {
         $message = sprintf(
-            __('Bypass Drip Content for LearnDash requires LearnDash LMS plugin to be installed and active. You can download %s here.', 'bypass-drip-content-ld'),
+            /* translators: %s is a link to the LearnDash website. */
+            __('Bypass Drip Content for LearnDash requires LearnDash LMS plugin to be installed and active. You can download %s here.', 'bypass-drip-content-for-learndash'),
             '<a href="https://www.learndash.com" target="_blank">LearnDash</a>'
         );
-        echo '<div class="error"><p>' . $message . '</p></div>';
+        echo '<div class="error"><p>' . esc_html($message) . '</p></div>';
     }
 }
 
